@@ -32,45 +32,24 @@ public class CombinedCharacterController : MonoBehaviour
     [Tooltip("Turn on if you want the Player to stop on a dime when moving on the ground")]
     public bool preciseMovement;
 
-    /*    [Header("Ramp controls:")] [Range(0, 90)] [Tooltip("Angle at which the player begins to slide down the slope.")]*/
-    private float maxSlopeAngle = 50f;
-
-
-    /*    [Range(0f, 100f)] [Tooltip("How tight to keep the player to the surface.")]*/
-    private float maxSnapSpeed = 15f;
-
-    /*    [Min(0f)] [Tooltip("Adjust based on height of player to keep player touching the surface.")]*/
-    private float snapToGroundProbeDistance = 2f;
-
-    private float snapForce = 5;
-
-    private readonly LayerMask probeMask = -1;
-    private readonly float rotationSpeed = 720f;
     private Rigidbody body;
 
     private Camera cam;
-    private Vector3 contactNormal, steepNormal;
     private bool desiredJump;
 
     private Direction direction = Direction.Right;
 
-    // The current direction of gravity
-    private float gravityDirection;
-    private int groundContactCount, steepContactCount;
-
-    private int jumpPhase;
-
-    private Vector3 lookAt;
-
-    private float minGroundDotProduct;
     private Vector3 playerInput;
 
 
     private bool setGroundedOverride;
-    private int stepsSinceLastGrounded, stepsSinceLastJump;
     private Quaternion to = Quaternion.identity;
-    private bool OnGround => groundContactCount > 0;
-    private bool OnSteep => steepContactCount > 0;
+    private bool OnGround { get {
+            double yDist = body.GetComponent<CapsuleCollider>().height / 2 + 0.1;
+            Vector3 DOWN = new(0, -1, 0);
+            return Physics.Raycast(body.GetComponent<Transform>().position, DOWN, (float)yDist, 6);
+        }
+    }
 
     protected internal bool OverrideOnGround { private get; set; } = true;
 
@@ -82,20 +61,14 @@ public class CombinedCharacterController : MonoBehaviour
         body = GetComponent<Rigidbody>();
         to = Quaternion.Euler(0, 0, 180);
 
-        if (lockToXY)
-        {
-            Quaternion rot = transform.rotation;
-            transform.rotation = Quaternion.Euler(rot.eulerAngles.x, rot.eulerAngles.y + 90,
-                rot.eulerAngles.z);
-        }
+        Quaternion rot = transform.rotation;
+        transform.rotation = Quaternion.Euler(rot.eulerAngles.x, rot.eulerAngles.y + 90,
+            rot.eulerAngles.z);
     }
 
     // Stay on ground stuff
     private void Update()
     {
-        // Todo: remove for performance later
-        minGroundDotProduct = Mathf.Cos(maxSlopeAngle * Mathf.Deg2Rad);
-
         playerInput.x = Input.GetAxisRaw("Horizontal");
         playerInput.z = Input.GetAxisRaw("Vertical");
         playerInput = Vector3.ClampMagnitude(playerInput, 1f);
@@ -133,10 +106,7 @@ public class CombinedCharacterController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        UpdateState();
         MovePlayer();
-        // Get the current direction of gravity
-        gravityDirection = Mathf.Sign(Physics.gravity.y);
 
         if (desiredJump)
         {
@@ -144,9 +114,7 @@ public class CombinedCharacterController : MonoBehaviour
             Jump();
         }
 
-
         // setGroundedOverride = false;
-
 
         Vector3 velocity = body.velocity;
         Vector3 scaledVelocity = Vector3.ClampMagnitude(new Vector3(velocity.x, 0, velocity.z), maxSpeed);
@@ -155,21 +123,9 @@ public class CombinedCharacterController : MonoBehaviour
 
         body.velocity = scaledVelocity;
 
-
-        // Control player rotation when operating in "Top-Down" mode
-        if (!lockToXY) RotateTowardsMouse();
-
-
-        ClearState();
-
         Debug.DrawRay(transform.position, Physics.gravity);
         body.AddForce(Physics.gravity); // Todo: shouldn't need this call
     }
-
-    private void OnCollisionEnter(Collision collision) => EvaluateCollision(collision);
-
-
-    private void OnCollisionStay(Collision collision) => EvaluateCollision(collision);
 
 
     /// <summary>
@@ -182,37 +138,6 @@ public class CombinedCharacterController : MonoBehaviour
         setGroundedOverride = isGrounded;
     }
 
-    private void RotateTowardsMouse()
-    {
-        // Get rotation from mouse position
-        Vector3 p = Input.mousePosition;
-        p.z = 20;
-        Ray ray = cam.ScreenPointToRay(p);
-
-        if (Physics.Raycast(ray, out RaycastHit hit))
-        {
-            lookAt = hit.point;
-            lookAt.y = 0;
-        }
-
-        Vector3 movementDirection = lookAt - transform.position;
-        movementDirection.y = 0;
-        movementDirection.Normalize();
-
-        if (movementDirection != Vector3.zero)
-        {
-            Quaternion toRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
-            Quaternion rot = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
-            body.MoveRotation(rot);
-        }
-    }
-
-    private void ClearState()
-    {
-        groundContactCount = steepContactCount = 0;
-        contactNormal = steepNormal = Vector3.zero;
-    }
-
 
     private void FlipDirection()
     {
@@ -222,70 +147,10 @@ public class CombinedCharacterController : MonoBehaviour
         body.MoveRotation(to);
     }
 
-
-    private void UpdateState()
-    {
-        stepsSinceLastGrounded += 1;
-        stepsSinceLastJump += 1;
-        if (OnGround || SnapToGround() || CheckSteepContacts())
-        {
-            stepsSinceLastGrounded = 0;
-            if (stepsSinceLastJump > 1) jumpPhase = 0;
-
-            if (groundContactCount > 1) contactNormal.Normalize();
-        }
-        else
-            contactNormal = Vector3.up;
-    }
-
-    private bool SnapToGround()
-    {
-          // here's the issue for jetpack with slopes
-          if (OverrideOnGround) return false;
-
-          if (stepsSinceLastGrounded > 1 || stepsSinceLastJump <= 2) return false;
-
-          float speed = body.velocity.magnitude;
-          if (speed > maxSnapSpeed) return false;
-
-          if (!Physics.Raycast(
-                  body.position, Vector3.down, out RaycastHit hit,
-                  snapToGroundProbeDistance * -gravityDirection, probeMask
-              ))
-              return false;
-
-          if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer)) return false;
-
-          groundContactCount = 1;
-          contactNormal = hit.normal;
-          float dot = Vector3.Dot(body.velocity, hit.normal);
-          if (dot > 0f) body.AddForce(Physics.gravity * snapForce, ForceMode.Acceleration);
-
-          return true;
-        return false;
-    }
-
-    private bool CheckSteepContacts()
-    {
-        if (steepContactCount > 1)
-        {
-            steepNormal.Normalize();
-            if (steepNormal.y >= minGroundDotProduct)
-            {
-                steepContactCount = 0;
-                groundContactCount = 1;
-                contactNormal = steepNormal;
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
     private void MovePlayer()
     {
-        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
-        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+        Vector3 xAxis = new(1, 0, 0); // TODO
+        Vector3 zAxis = new(0, 1, 0);
         Vector3 position = transform.position;
         Debug.DrawRay(position, xAxis * 2, Color.green);
         Debug.DrawRay(position, zAxis * 2, Color.green);
@@ -308,7 +173,7 @@ public class CombinedCharacterController : MonoBehaviour
                 else
                 {
                     body.velocity = new Vector3(0, body.velocity.y, body.velocity.z);
-                    body.AddForce(Physics.gravity * snapForce, ForceMode.Acceleration);
+                    body.AddForce(Physics.gravity, ForceMode.Acceleration);
                 }
             }
 
@@ -318,7 +183,7 @@ public class CombinedCharacterController : MonoBehaviour
                 else
                 {
                     body.velocity = new Vector3(body.velocity.x, body.velocity.y, 0);
-                    body.AddForce(Physics.gravity * snapForce, ForceMode.Acceleration);
+                    body.AddForce(Physics.gravity, ForceMode.Acceleration);
                 }
             }
         }
@@ -327,74 +192,16 @@ public class CombinedCharacterController : MonoBehaviour
     private void Jump()
     {
         Vector3 jumpDirection;
-        if (OnGround)
-            jumpDirection = contactNormal;
-/*        else if (OnSteep)
-        {
-            jumpDirection = steepNormal;
-            jumpPhase = 0;
-        }*/
-        else if (airJumps > 0 && jumpPhase <= airJumps)
-        {
-            if (jumpPhase == 0) jumpPhase = 1;
+        if (!OnGround) return;
 
-            jumpDirection = contactNormal;
-        }
-        else
-            return;
-
-
-        stepsSinceLastJump = 0;
-        jumpPhase += 1;
         float jumpSpeed = Mathf.Sqrt(Mathf.Abs(-2f * Physics.gravity.y) * jumpHeight * 2);
-        jumpDirection = (jumpDirection + Vector3.up).normalized;
+        jumpDirection = (Vector3.up).normalized;
         float alignedSpeed = Vector3.Dot(body.velocity, jumpDirection);
         if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
 
 
         body.AddForce(transform.up * jumpSpeed, ForceMode.VelocityChange);
     }
-
-    private void EvaluateCollision(Collision collision)
-    {
-        float minDot = GetMinDot(collision.gameObject.layer);
-        for (var i = 0; i < collision.contactCount; i++)
-        {
-            Vector3 normal = collision.GetContact(i).normal;
-
-            if (gravityDirection > 0)
-            {
-                if (normal.y <= -minDot)
-                {
-                    groundContactCount += 1;
-                    contactNormal += normal;
-                }
-                else if (normal.y > -0.01f)
-                {
-                    steepContactCount += 1;
-                    steepNormal += normal;
-                }
-            }
-            else
-            {
-                if (normal.y >= minDot)
-                {
-                    groundContactCount += 1;
-                    contactNormal += normal;
-                }
-                else if (normal.y > -0.01f)
-                {
-                    steepContactCount += 1;
-                    steepNormal += normal;
-                }
-            }
-        }
-    }
-
-    private Vector3 ProjectOnContactPlane(Vector3 vector) =>
-        vector - contactNormal * Vector3.Dot(vector, contactNormal);
-
-    private float GetMinDot(int layer) => minGroundDotProduct;
 
     private enum Direction
     {
