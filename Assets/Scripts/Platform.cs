@@ -28,6 +28,7 @@ public class Platform : MonoBehaviour
 
     public Vector3 GetInsetCharacterPosition(Transform characterTransform, Transform cameraTransform)
     {
+        // TODO
         return Vector3.zero;
     }
 
@@ -38,21 +39,24 @@ public class Platform : MonoBehaviour
 
     public float GetTopYValue()
     {
-        return -1000;
+        return _collider.bounds.max.y;
     }
 
     public bool IsPointInFrontOf(Vector3 point, Transform cameraTransform)
     {
+        // TODO
         return true;
     }
 
     public bool IsPointBehind(Vector3 point, Transform cameraTransform)
     {
+        // TODO
         return true;
     }
 
     public bool IsPointAbove(Vector3 point)
     {
+        // TODO
         return true;
     }
 }
