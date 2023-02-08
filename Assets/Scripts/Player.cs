@@ -18,11 +18,13 @@ public class Player : MonoBehaviour
     private Camera _camera;
     private Platform _currentPlatform;
 
+    private float _camDebounce = 0;
+
     // Start is called before the first frame update
     void Start()
     {
         _body = GetComponent<Rigidbody>();
-        _collider = GetComponent<MeshCollider>();
+        _collider = GetComponent<CapsuleCollider>();
         _transform = GetComponent<Transform>();
         _camera = FindObjectOfType<Camera>();
     }
@@ -31,7 +33,6 @@ public class Player : MonoBehaviour
     void Update()
     {
         float horizontalInput = Input.GetAxis("Horizontal");
-
         SetMoveVector(horizontalInput);
 
         if(Input.GetKeyDown(KeyCode.Space))
@@ -39,20 +40,11 @@ public class Player : MonoBehaviour
             TryToJump();
         }
 
-        LimitYVelocity();
-        UpdatePlatform();
+        float cameraChange = Input.GetAxis("CameraTurn");
+        TurnCamera(Math.Sign(cameraChange));
+        _camDebounce -= Time.deltaTime;
 
-        Platform plat = _currentPlatform;
-        if (plat)
-        {
-            /*_transform.SetPositionAndRotation(
-                plat.GetInsetCharacterPosition(
-                    _transform,
-                    _camera.GetComponent<Transform>()
-                ), 
-                _transform.rotation
-            );*/
-        }
+        LimitYVelocity();
     }
 
     bool IsGrounded() {
@@ -66,78 +58,56 @@ public class Player : MonoBehaviour
             return;
         }
 
-        _body.velocity = new Vector3(_body.velocity.x, _jumpPower, 0);
+        _body.velocity = new Vector3(_body.velocity.x, _jumpPower, _body.velocity.z);
     }
 
     void SetMoveVector(float moveDir)
     {
-        Vector3 potentialMove = new Vector3(moveDir * _playerSpeed, _body.velocity.y, 0);
+        Vector3 moveAxis = Vector3.Cross(GetCameraLookUnit(), Vector3.down);
+
+        Debug.Log(moveAxis);
+
+        Vector3 potentialMove = _playerSpeed * moveDir * moveAxis + new Vector3(0, _body.velocity.y, 0);
         _body.velocity = potentialMove;
     }
 
     void LimitYVelocity()
     {
-        _body.velocity = new Vector3(_body.velocity.x, Math.Min(_jumpPower, _body.velocity.y), 0);
-    }
-    
-    Vector3[] GetFeetLocations()
-    {
-        // TODO
-        Vector3 corner1 = _collider.bounds.min;
-        Vector3 corner2 = new(_collider.bounds.max.x, corner1.y, corner1.z);
-        return new Vector3[]{ corner1, corner2};
+        _body.velocity = new Vector3(_body.velocity.x, Math.Min(_jumpPower, _body.velocity.y), _body.velocity.z);
     }
 
-    void UpdatePlatform()
+    // dir should be -1, 0, 1
+    void TurnCamera(int dir)
     {
-        Platform[] allPlats = Platform.GetAllPlatforms();
-        Transform cameraTransform = _camera.GetComponent<Transform>();
-
-        _currentPlatform = null;
-        Platform tallestUsablePlat = null;
-        
-        foreach (Vector3 feetPos in GetFeetLocations())
+        if (dir == 0 || _camDebounce > 0)
         {
-            foreach (Platform plat in allPlats)
-            {
-                // true by default, set to false if needed
-                plat.SetCollidable(true);
-
-                if (tallestUsablePlat && (plat.GetTopYValue() < tallestUsablePlat.GetTopYValue()))
-                { // is it taller than the one i already have?
-                    continue;
-                }
-
-                if (
-                    tallestUsablePlat &&
-                    plat.GetTopYValue() == tallestUsablePlat.GetTopYValue() &&
-                    !tallestUsablePlat.IsPointInFrontOf(plat.Position, cameraTransform) // if a platform is behind the current one
-                ) {
-                    continue;
-                }
-
-                //local feetPos = Character:GetFeetPos()
-
-                if (plat.GetTopYValue() > feetPos.y + _characterSinkLeeway)
-                { // is it under feet?
-                    Debug.Log("hi");
-                    plat.SetCollidable(false);
-                    continue;
-                }
-
-                if (!(
-                    plat.IsPointInFrontOf(feetPos, cameraTransform) ||
-                    plat.IsPointBehind(feetPos, cameraTransform) ||
-                    plat.IsPointAbove(feetPos)
-                ))
-                {
-                    continue;
-                }
-
-                tallestUsablePlat = plat;
-            }
+            return;
         }
 
-        _currentPlatform = tallestUsablePlat;
+        _camDebounce = 0.5f;
+
+
+        Transform transCamera = _camera.GetComponent<Transform>();
+        Vector3 v = transCamera.position;
+
+        Vector3.Cross(v, Vector3.up);
+
+        transCamera.position = Vector3.Cross(v, dir * Vector3.up);
+        transCamera.LookAt(Vector3.zero, Vector3.up);
+
+        _transform.LookAt(_transform.position - GetCameraLookUnit(), Vector3.up);
+    }
+
+    Vector3 GetCameraLookUnit()
+    {
+        Transform transCamera = _camera.GetComponent<Transform>();
+        return transCamera.forward.normalized;
+    }
+
+    void ChangePlatforms()
+    {
+        PopOutPlatform[] plats = FindObjectsOfType<PopOutPlatform>();
+
+
     }
  }
