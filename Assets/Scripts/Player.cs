@@ -63,7 +63,7 @@ public class Player : MonoBehaviour
 
     void SetMoveVector(float moveDir)
     {
-        Vector3 moveAxis = Vector3.Cross(GetCameraLookUnit(), Vector3.down);
+        Vector3 moveAxis = GetMoveUnit();
 
         Debug.Log(moveAxis);
 
@@ -104,10 +104,16 @@ public class Player : MonoBehaviour
         return transCamera.forward.normalized;
     }
 
+    Vector3 GetMoveUnit()
+    {
+        return Vector3.Cross(GetCameraLookUnit(), Vector3.down);
+    }
+
     void ChangePlatforms()
     {
         PopOutPlatform[] plats = FindObjectsOfType<PopOutPlatform>();
+        Transform _cameraTrans = _camera.GetComponent<Transform>();
 
-
+        Array.ForEach(plats, p => p.PopOut(-GetCameraLookUnit(), _cameraTrans.position.magnitude - 1));
     }
  }

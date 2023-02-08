@@ -18,6 +18,6 @@ public class PopOutPlatform : MonoBehaviour
 
     public void PopOut(Vector3 direction, float distance)
     {
-
+        Instantiate(toclone, Position, Rotation, Quaternion.Identity);
     }
 }
