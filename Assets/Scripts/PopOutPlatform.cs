@@ -5,9 +5,8 @@ using UnityEngine;
 
 public class PopOutPlatform : MonoBehaviour
 {
-    private GameObject[] Popped;
-    private float PopOutDistance = 19;
-    private float PlatformHeight = 1;
+    private float PopOutDistance = 29;
+    private float PlatformHeight = 0.4f;
 
     // Start is called before the first frame update
     void Start()
@@ -31,20 +30,21 @@ public class PopOutPlatform : MonoBehaviour
         GameObject p0 = Instantiate(invisPlat);
         p0.GetComponent<Transform>().position = defaultPos;
 
-        Popped = new GameObject[]
-        {
-            MakeInvisPlat(p0, new(1, 0, 0),  new(0, 1, 1), bounds, defaultPos),
-            MakeInvisPlat(p0, new(-1, 0, 0), new(0, 1, 1), bounds, defaultPos),
-            MakeInvisPlat(p0, new(0, 0, 1),  new(1, 1, 0), bounds, defaultPos),
-            MakeInvisPlat(p0, new(0, 0, -1), new(1, 1, 0), bounds, defaultPos),
-        };
+        MakeInvisPlat(p0, new(1, 0, 0), new(0, 1, 1), bounds, defaultPos);
+        MakeInvisPlat(p0, new(-1, 0, 0), new(0, 1, 1), bounds, defaultPos);
+        MakeInvisPlat(p0, new(0, 0, 1), new(1, 1, 0), bounds, defaultPos);
+        MakeInvisPlat(p0, new(0, 0, -1), new(1, 1, 0), bounds, defaultPos);
 
         Destroy(p0);
     }
 
     GameObject MakeInvisPlat(GameObject toClone, Vector3 popOutDir, Vector3 inverseDir, Bounds bounds, Vector3 origPos)
     {
-        // TODO if the ray hits anything, dont make the platform if (Physics.Raycast())
+        // TODO if the ray hits anything, dont make the platform
+         if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir))
+        {
+            return null;
+        }
 
         GameObject clone = Instantiate(toClone, null);
 

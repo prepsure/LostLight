@@ -15,14 +15,14 @@ public class Player : MonoBehaviour
     private Transform _transform;
     private Camera _camera;
 
-    private float popOutDistance = 19;
+    private float popOutDistance = 29;
     private bool yes = true;
 
     // Start is called before the first frame update
     void Start()
     {
         _body = GetComponent<Rigidbody>();
-        _collider = GetComponent<CapsuleCollider>();
+        _collider = GetComponent<Collider>();
         _transform = GetComponent<Transform>();
         _camera = FindObjectOfType<Camera>();
 
@@ -97,7 +97,7 @@ public class Player : MonoBehaviour
 
         Vector3.Cross(v, Vector3.up);
 
-        _camera.GetComponent<CameraTween>()._cameraGoal = Vector3.Cross(v, dir * Vector3.up);
+        _camera.GetComponent<CameraTween>()._cameraGoal = Vector3.Cross(v, dir * Vector3.up); //+ new Vector3(0, _transform.position.y, 0);
         _camera.GetComponent<CameraTween>()._active = true;
 
         StartCoroutine(FinishCamTurn());
@@ -117,6 +117,8 @@ public class Player : MonoBehaviour
 
     void PutPlayerIn3DWorld()
     {
+        _body.constraints = RigidbodyConstraints.FreezeAll;
+
         Vector3 camDir = GetCameraLookUnit();
 
         RaycastHit platformStandingOn;
@@ -130,6 +132,8 @@ public class Player : MonoBehaviour
 
     void PutPlayerIn2DWorld()
     {
+        _body.constraints = RigidbodyConstraints.FreezeRotation;
+
         Vector3 camDir = GetCameraLookUnit();
 
         _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) + -camDir * popOutDistance;
