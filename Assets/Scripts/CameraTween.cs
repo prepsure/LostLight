@@ -13,7 +13,7 @@ public class CameraTween : MonoBehaviour
 
     private Vector3 cameraStart;
     private float t = 0;
-    private const float speed = 3;
+    private const float speed = 2;
 
     // Start is called before the first frame update
     void Start()
@@ -26,8 +26,14 @@ public class CameraTween : MonoBehaviour
     {
         if(_undoActive)
         {
-            _undoActive = false;
             _active = false;
+            if (t <= 1.2)
+            {
+                t += Time.deltaTime * speed;
+                return;
+            }
+            _undoActive = false;
+            t = 0;
         }
 
         if (_active)
@@ -35,7 +41,6 @@ public class CameraTween : MonoBehaviour
             if (t >= 1)
             {
                 _undoActive = true;
-                t = 0;
 
                 GetComponent<Transform>().position = _cameraGoal;
                 GetComponent<Transform>().LookAt(Vector3.zero, Vector3.up);

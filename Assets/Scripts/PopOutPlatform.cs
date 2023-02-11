@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PopOutPlatform : MonoBehaviour
 {
-    private float PopOutDistance = 29;
+    public static float PopOutDistance = 40;
     private float PlatformHeight = 0.4f;
 
     // Start is called before the first frame update
@@ -15,7 +15,7 @@ public class PopOutPlatform : MonoBehaviour
 
         Debug.Log(invisPlat);
 
-        var bounds = GetComponent<BoxCollider>().bounds;
+        var bounds = GetComponent<Collider>().bounds;
 
         Vector3 defaultPos = new(
             bounds.center.x,
@@ -41,7 +41,7 @@ public class PopOutPlatform : MonoBehaviour
     GameObject MakeInvisPlat(GameObject toClone, Vector3 popOutDir, Vector3 inverseDir, Bounds bounds, Vector3 origPos)
     {
         // TODO if the ray hits anything, dont make the platform
-         if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir))
+        if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir, 1 << 13))
         {
             return null;
         }

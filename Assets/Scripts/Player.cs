@@ -15,8 +15,9 @@ public class Player : MonoBehaviour
     private Transform _transform;
     private Camera _camera;
 
-    private float popOutDistance = 29;
+    private float popOutDistance = PopOutPlatform.PopOutDistance;
     private bool yes = true;
+    private Vector3 depthTracking = Vector3.zero;
 
     // Start is called before the first frame update
     void Start()
@@ -46,6 +47,32 @@ public class Player : MonoBehaviour
         LimitYVelocity();
 
         _transform.LookAt(_transform.position - GetCameraLookUnit(), Vector3.up);
+
+        /*if (!_camera.GetComponent<CameraTween>()._active)
+        {
+            checkForNewDepth();
+        }*/
+
+    }
+
+    Vector3 getFeetPos()
+    {
+        return new Vector3(_transform.position.x, _collider.bounds.min.y + 0.1f, transform.position.z);
+    }
+
+    void checkForNewDepth()
+    {
+        if (Physics.Raycast(getFeetPos(), GetCameraLookUnit(), out RaycastHit hit))
+        {
+            Vector3 newDepth = Vector3.Scale(hit.point, makepositive(GetCameraLookUnit()));
+            Vector3 oldDepth = Vector3.Scale(depthTracking, makepositive(GetCameraLookUnit()));
+
+            Vector3 closest = getCloserTo(_transform.position, newDepth, oldDepth);
+
+            depthTracking = Vector3.Scale(GetCameraPlaneVector(), depthTracking) + closest;
+        }
+
+        Debug.Log(depthTracking);
     }
 
     bool IsGrounded() {
@@ -119,19 +146,18 @@ public class Player : MonoBehaviour
     {
         _body.constraints = RigidbodyConstraints.FreezeAll;
 
-        Vector3 camDir = GetCameraLookUnit();
-
         RaycastHit platformStandingOn;
-
         Physics.Raycast(transform.position, -Vector3.up, out platformStandingOn);
-
         Vector3 origPos = platformStandingOn.collider.gameObject.GetComponent<ArbitraryDataScript>()._originalPosition;
 
-        _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) + Vector3.Scale(makepositive(GetCameraLookUnit()), origPos);
+        _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) 
+            + Vector3.Scale(makepositive(GetCameraLookUnit()), origPos); // depthTracking);
     }
 
     void PutPlayerIn2DWorld()
     {
+        depthTracking = _transform.position;
+
         _body.constraints = RigidbodyConstraints.FreezeRotation;
 
         Vector3 camDir = GetCameraLookUnit();
@@ -162,11 +188,8 @@ public class Player : MonoBehaviour
         return new Vector3(Mathf.Abs(raw.x), Mathf.Abs(raw.y), Mathf.Abs(raw.z));
     }
 
-    void ChangePlatforms()
+    Vector3 getCloserTo(Vector3 closerTo, Vector3 a, Vector3 b)
     {
-        PopOutPlatform[] plats = FindObjectsOfType<PopOutPlatform>();
-        Transform _cameraTrans = _camera.GetComponent<Transform>();
-
-        //Array.ForEach(plats, p => p.PopOut(-GetCameraLookUnit(), _cameraTrans.position.magnitude - 1));
+        return (closerTo - a).magnitude > (closerTo - b).magnitude ? b : a;
     }
  }
