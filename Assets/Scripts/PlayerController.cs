@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     private float _playerSpeed;
@@ -57,14 +57,12 @@ public class Player : MonoBehaviour
             checkForNewDepth();
         }*/
 
-        LastStandingPosition = transform.position;
+        Physics.Raycast(transform.position, -Vector3.up, out var platformStandingOn, 1f);
 
-        RaycastHit platformStandingOn;
-        Physics.Raycast(transform.position, -Vector3.up, out platformStandingOn);
-
-        if (platformStandingOn.collider.gameObject != null)
+        if (platformStandingOn.collider != null && platformStandingOn.collider.gameObject != null)
         {
             lastPlatform = platformStandingOn.collider.gameObject;
+            LastStandingPosition = transform.position;
         }
     }
 

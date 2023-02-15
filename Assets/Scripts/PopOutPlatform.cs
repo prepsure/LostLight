@@ -13,8 +13,6 @@ public class PopOutPlatform : MonoBehaviour
     {
         GameObject invisPlat = (GameObject)Resources.Load("InvisiblePlatform");
 
-        Debug.Log(invisPlat);
-
         var bounds = GetComponent<Collider>().bounds;
 
         Vector3 defaultPos = new(
