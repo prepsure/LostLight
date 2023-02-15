@@ -6,7 +6,7 @@ using UnityEngine;
 public class PopOutPlatform : MonoBehaviour
 {
     public static float PopOutDistance = 40;
-    private float PlatformHeight = 0.4f;
+    private float PlatformHeight = 0.8f;
 
     // Start is called before the first frame update
     void Start()

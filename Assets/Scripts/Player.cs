@@ -19,6 +19,10 @@ public class Player : MonoBehaviour
     private bool yes = true;
     private Vector3 depthTracking = Vector3.zero;
 
+    private GameObject lastPlatform;
+    public Vector3 LastStandingPosition { get; private set; }
+    public bool CanTurn = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -53,6 +57,15 @@ public class Player : MonoBehaviour
             checkForNewDepth();
         }*/
 
+        LastStandingPosition = transform.position;
+
+        RaycastHit platformStandingOn;
+        Physics.Raycast(transform.position, -Vector3.up, out platformStandingOn);
+
+        if (platformStandingOn.collider.gameObject != null)
+        {
+            lastPlatform = platformStandingOn.collider.gameObject;
+        }
     }
 
     Vector3 getFeetPos()
@@ -108,7 +121,22 @@ public class Player : MonoBehaviour
     // dir should be -1, 0, 1
     void TurnCamera(int dir)
     {
-        if (dir == 0 || _camera.GetComponent<CameraTween>()._active || !yes)
+        if (!CanTurn)
+        {
+            return;
+        }
+
+        if (dir == 0)
+        {
+            return;
+        }
+
+        if (_camera.GetComponent<CameraTween>()._active)
+        {
+            return;
+        }
+
+        if (!yes)
         {
             return;
         }
@@ -146,9 +174,7 @@ public class Player : MonoBehaviour
     {
         _body.constraints = RigidbodyConstraints.FreezeAll;
 
-        RaycastHit platformStandingOn;
-        Physics.Raycast(transform.position, -Vector3.up, out platformStandingOn);
-        Vector3 origPos = platformStandingOn.collider.gameObject.GetComponent<ArbitraryDataScript>()._originalPosition;
+        Vector3 origPos = lastPlatform.GetComponent<ArbitraryDataScript>()._originalPosition;
 
         _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) 
             + Vector3.Scale(makepositive(GetCameraLookUnit()), origPos); // depthTracking);
