@@ -29,6 +29,7 @@ public class RespawnPlayerWhenTouched : MonoBehaviour
         Debug.Log(other.gameObject.GetComponent<Transform>().position);
         Debug.Log(other.gameObject.GetComponent<PlayerController>().LastStandingPosition);
 
-        other.gameObject.GetComponent<Transform>().position = other.gameObject.GetComponent<PlayerController>().LastStandingPosition + new Vector3(0, 1, 0);
+        other.gameObject.GetComponent<Transform>().position = other.gameObject.GetComponent<PlayerController>().LastStandingPosition + new Vector3(0, 0, 0);
+        other.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
     }
 }
