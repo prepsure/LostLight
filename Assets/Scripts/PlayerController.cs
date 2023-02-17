@@ -20,6 +20,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 depthTracking = Vector3.zero;
 
     private GameObject lastPlatform;
+
+    private double lastStandingTime;
+    private const double coyoteTime = 0.1;
     public Vector3 LastStandingPosition { get; private set; }
     public bool CanTurn = true;
 
@@ -57,12 +60,13 @@ public class PlayerController : MonoBehaviour
             checkForNewDepth();
         }*/
 
-        Physics.Raycast(transform.position, -Vector3.up, out var platformStandingOn, 1f);
+        Physics.Raycast(getFeetPos(), -Vector3.up, out var platformStandingOn, 0.15f);
 
         if (platformStandingOn.collider != null && platformStandingOn.collider.gameObject != null)
         {
             lastPlatform = platformStandingOn.collider.gameObject;
             LastStandingPosition = transform.position;
+            lastStandingTime = Time.realtimeSinceStartupAsDouble;
         }
     }
 
@@ -71,7 +75,7 @@ public class PlayerController : MonoBehaviour
         return new Vector3(_transform.position.x, _collider.bounds.min.y + 0.1f, transform.position.z);
     }
 
-    void checkForNewDepth()
+    /*void checkForNewDepth()
     {
         if (Physics.Raycast(getFeetPos(), GetCameraLookUnit(), out RaycastHit hit))
         {
@@ -84,7 +88,7 @@ public class PlayerController : MonoBehaviour
         }
 
         Debug.Log(depthTracking);
-    }
+    }*/
 
     bool IsGrounded() {
         return Physics.Raycast(transform.position, -Vector3.up, (float)(_collider.bounds.extents.y + 0.1)) 
@@ -180,6 +184,14 @@ public class PlayerController : MonoBehaviour
 
     void PutPlayerIn2DWorld()
     {
+        // if a raycast towards the camera hits anything, dont take the player off of the 3D world, make all "real" platforms noncollidable if they're lower than u
+        // and pop them forward when there's no longer anything in front of them (relative to the camera)
+        if (// raycast hits)
+        {
+            // put in limbo
+            return;
+        }
+
         depthTracking = _transform.position;
 
         _body.constraints = RigidbodyConstraints.FreezeRotation;

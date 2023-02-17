@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Platform
   - InvisPlatform
+  - Block
+  - InvisBlock
   layers:
   - Default
   - TransparentFX
