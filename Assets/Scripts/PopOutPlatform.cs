@@ -39,15 +39,17 @@ public class PopOutPlatform : MonoBehaviour
     GameObject MakeInvisPlat(GameObject toClone, Vector3 popOutDir, Vector3 inverseDir, Bounds bounds, Vector3 origPos)
     {
         // TODO if the ray hits anything, dont make the platform
-        if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir, 1 << 13))
+        if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir,999, 1 << 12))
         {
             return null;
         }
 
-        GameObject clone = Instantiate(toClone, null);
+        GameObject clone = Instantiate(toClone, GameObject.Find("_invis_").GetComponent<Transform>());
+        clone.layer = 12;
 
         ArbitraryDataScript data = clone.AddComponent<ArbitraryDataScript>();
         data._originalPosition = origPos;
+        data._lookVect = -popOutDir;
 
         Transform cloneTrans = clone.GetComponent<Transform>();
         Vector3 pos = cloneTrans.position;
@@ -61,6 +63,12 @@ public class PopOutPlatform : MonoBehaviour
 
         clone.tag = "InvisPlatform";
         clone.GetComponent<Collider>().isTrigger = true;
+
+        if (Physics.Raycast(toClone.GetComponent<Transform>().position, popOutDir, 1 << 13))
+        {
+            data._isLimbo = true;
+            data._lookVect = -data._lookVect;
+        }
 
         return clone;
     }

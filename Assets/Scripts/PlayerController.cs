@@ -17,14 +17,19 @@ public class PlayerController : MonoBehaviour
 
     private float popOutDistance = PopOutPlatform.PopOutDistance;
     private bool yes = true;
+    public bool yes2 = true;
     private Vector3 depthTracking = Vector3.zero;
 
     private GameObject lastPlatform;
 
     private double lastStandingTime;
+    public bool LastLimbo = false;
     private const double coyoteTime = 0.1;
     public Vector3 LastStandingPosition { get; private set; }
     public bool CanTurn = true;
+
+    public static bool isLimbo = false;
+    public static float limboHeight = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -60,19 +65,29 @@ public class PlayerController : MonoBehaviour
             checkForNewDepth();
         }*/
 
-        Physics.Raycast(getFeetPos(), -Vector3.up, out var platformStandingOn, 0.15f);
+        Physics.Raycast(getFeetPos(), -Vector3.up, out var platformStandingOn, 0.15f, 1 << 12);
 
-        if (platformStandingOn.collider != null && platformStandingOn.collider.gameObject != null)
+        if (platformStandingOn.collider != null 
+            && platformStandingOn.collider.gameObject != null 
+            && !(isLimbo && platformStandingOn.collider.isTrigger)
+            && (isLimbo == platformStandingOn.collider.GetComponent<ArbitraryDataScript>()._isLimbo || isLimbo))
         {
             lastPlatform = platformStandingOn.collider.gameObject;
             LastStandingPosition = transform.position;
             lastStandingTime = Time.realtimeSinceStartupAsDouble;
+            LastLimbo = isLimbo;
+        }
+
+        if (isLimbo && !Physics.Raycast(getFeetPos() + new Vector3(0, 0.1f, 0), -GetCameraLookUnit()) && yes)
+        {
+            isLimbo = false;
+            _transform.position = Vector3.Scale(_transform.position, GetCameraPlaneVector()) + popOutDistance *-GetCameraLookUnit();
         }
     }
 
     Vector3 getFeetPos()
     {
-        return new Vector3(_transform.position.x, _collider.bounds.min.y + 0.1f, transform.position.z);
+        return new Vector3(_transform.position.x, _transform.position.y - 1 + 0.1f, transform.position.z);
     }
 
     /*void checkForNewDepth()
@@ -186,11 +201,14 @@ public class PlayerController : MonoBehaviour
     {
         // if a raycast towards the camera hits anything, dont take the player off of the 3D world, make all "real" platforms noncollidable if they're lower than u
         // and pop them forward when there's no longer anything in front of them (relative to the camera)
-        if (// raycast hits)
+        isLimbo = Physics.Raycast(getFeetPos()+new Vector3(0, 0.1f, 0), -GetCameraLookUnit(), 999, 1<<13);
+
+        if (isLimbo)
         {
-            // put in limbo
-            return;
+            limboHeight = lastPlatform.GetComponent<Collider>().bounds.max.y;
         }
+
+        //Debug.Log(limboHeight);
 
         depthTracking = _transform.position;
 
@@ -198,7 +216,9 @@ public class PlayerController : MonoBehaviour
 
         Vector3 camDir = GetCameraLookUnit();
 
-        _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) + -camDir * popOutDistance;
+        int place = isLimbo ? 1 : -1;
+
+        _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) + place * popOutDistance * camDir;
     }
 
     Vector3 GetCameraLookUnit()

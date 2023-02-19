@@ -12,4 +12,10 @@ public class ArbitraryDataScript : MonoBehaviour
 
     [SerializeField]
     public bool _doesCollide;
+
+    [SerializeField]
+    public bool _isLimbo;
+
+    public bool _isLimboAndNot;
+    public Vector3 _lookVect;
 }

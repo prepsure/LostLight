@@ -23,7 +23,14 @@ public class RespawnPlayerWhenTouched : MonoBehaviour
             return;
         }
 
-        other.gameObject.GetComponent<Transform>().position = other.gameObject.GetComponent<PlayerController>().LastStandingPosition + new Vector3(0, 0, 0);
+        PlayerController pc = other.gameObject.GetComponent<PlayerController>();
+
+        Debug.Log(pc.LastStandingPosition);
+
+        PlayerController.isLimbo = true;
+        other.gameObject.GetComponent<Transform>().position = pc.LastStandingPosition;
         other.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+
+        pc.yes2 = false;
     }
 }

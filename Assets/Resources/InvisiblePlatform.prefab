@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3008374013176873708}
   - component: {fileID: 5577583128109372275}
   - component: {fileID: 5051876256414097322}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: InvisiblePlatform
   m_TagString: Platform
   m_Icon: {fileID: 0}
