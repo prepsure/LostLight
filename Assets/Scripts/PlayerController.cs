@@ -31,6 +31,8 @@ public class PlayerController : MonoBehaviour
     public static bool isLimbo = false;
     public static float limboHeight = 0;
 
+    private Vector3 origPos = new(-2, 0, 2);
+
     // Start is called before the first frame update
     void Start()
     {
@@ -191,7 +193,12 @@ public class PlayerController : MonoBehaviour
     {
         _body.constraints = RigidbodyConstraints.FreezeAll;
 
-        Vector3 origPos = lastPlatform.GetComponent<ArbitraryDataScript>()._originalPosition;
+        Vector3 possibleOrigPos = lastPlatform.GetComponent<ArbitraryDataScript>()._originalPosition;
+
+        if (possibleOrigPos != null)
+        {
+            origPos = possibleOrigPos;
+        }
 
         _transform.position = Vector3.Scale(transform.position, GetCameraPlaneVector()) 
             + Vector3.Scale(makepositive(GetCameraLookUnit()), origPos); // depthTracking);

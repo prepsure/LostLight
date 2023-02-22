@@ -7,7 +7,7 @@ Shader "SolidColorWithZTest"
     }
         SubShader
     {
-        Tags { "Queue" = "Geometry+1" }
+        Tags { "Queue" = "Transparent+1" }
         Pass
         {
             ZTest Less
