@@ -11,7 +11,7 @@ public class CameraTween : MonoBehaviour
     [SerializeField]
     public Vector3 _cameraGoal;
 
-    private Vector3 cameraStart;
+    public Vector3 cameraStart;
     private float t = 0;
     private const float speed = 2;
 
