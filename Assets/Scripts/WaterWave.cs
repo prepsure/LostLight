@@ -19,11 +19,11 @@ public class WaterWave : MonoBehaviour
     {
         if (_camera.GetComponent<CameraTween>()._active)
         {
-            speed = 0.03f;
+            speed = 0.01f;
         } 
         else
         {
-            speed = 0.001f;
+            speed = 0.0005f;
         }
 
         // was going to make the water move in the camera direction but noooo
@@ -31,7 +31,7 @@ public class WaterWave : MonoBehaviour
 
         Vector2 offset = GetComponent<Renderer>().materials[0].GetTextureOffset("_MainTex");
         GetComponent<Renderer>().materials[0].SetTextureOffset("_MainTex", offset + new Vector2(speed, 0));
-        GetComponent<Transform>().localPosition = new Vector3(0, -16.75f, 0) + 0.25f * Mathf.Sin(Time.realtimeSinceStartup) * Vector3.up;
+        GetComponent<Transform>().localPosition = new Vector3(0, -16.75f, 0) + 0.25f * Mathf.Sin(Time.realtimeSinceStartup*1.5f) * Vector3.up;
     }
 
     /*int func(Vector3 v)
