@@ -8,11 +8,6 @@ Shader "Overtop"
         SubShader
     {
         Tags { "Queue" = "Transparent+1" }
-        Pass
-        {
-            ZTest Less
-            Color[_Color2]
-        }
 
         Pass
         {
