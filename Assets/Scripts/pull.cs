@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class flash : MonoBehaviour
+public class pull : MonoBehaviour
 {
     [SerializeField]
     public Texture Texture1;
@@ -25,21 +25,6 @@ public class flash : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Time.time - lastUpdated > delay)
-        {
-            lastUpdated = Time.time;
-
-            on = !on;
-
-            Texture arrows = Texture1;
-            
-            if (on)
-            {
-                arrows = Texture2;
-            }
-
-            r.materials[0].SetTexture("_MainTex", arrows);
-
-        }
+            r.materials[0].SetTextureOffset("_MainTex", new Vector2(0, Time.time * 0.02f));
     }
 }

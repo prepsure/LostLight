@@ -9,11 +9,18 @@ public class PlayerController : MonoBehaviour
     private float _playerSpeed;
     [SerializeField]
     private float _jumpPower;
+    [SerializeField]
+    Sprite _standingSprite;
+    [SerializeField]
+    Sprite _walkSprite;
+    [SerializeField]
+    Sprite _jumpSprite;
 
     private Rigidbody _body;
     private Collider _collider;
     private Transform _transform;
     private Camera _camera;
+    private GameObject _sprite;
 
     private float popOutDistance = PopOutPlatform.PopOutDistance;
     private bool yes = true;
@@ -40,6 +47,7 @@ public class PlayerController : MonoBehaviour
         _collider = GetComponent<Collider>();
         _transform = GetComponent<Transform>();
         _camera = FindObjectOfType<Camera>();
+        _sprite = GameObject.Find("sprite");
 
         PutPlayerIn2DWorld();
     }
@@ -49,6 +57,29 @@ public class PlayerController : MonoBehaviour
     {
         float horizontalInput = Input.GetAxis("Horizontal");
         SetMoveVector(horizontalInput);
+
+        SpriteRenderer sr = _sprite.GetComponent<SpriteRenderer>();
+        sr.flipX = horizontalInput < 0;
+
+        if (!_camera.GetComponent<CameraTween>()._active) {
+            _sprite.GetComponent<Animator>().enabled = false;
+
+            if (!IsGrounded())
+            {
+                sr.sprite = _jumpSprite;
+            } else
+            {
+                if (horizontalInput == 0)
+                {
+                    sr.sprite = _standingSprite;
+                }
+                else
+                {
+                    _sprite.GetComponent<Animator>().enabled = true;
+                }
+            }
+        }
+
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -67,7 +98,7 @@ public class PlayerController : MonoBehaviour
             checkForNewDepth();
         }*/
 
-        Physics.Raycast(getFeetPos(), -Vector3.up, out var platformStandingOn, 0.15f, 1 << 12);
+        Physics.Raycast(getFeetPos(), -Vector3.up, out var platformStandingOn, 0.15f, (1 << 12) | (1 << 14));
 
         if (platformStandingOn.collider != null 
             && platformStandingOn.collider.gameObject != null 
@@ -85,6 +116,8 @@ public class PlayerController : MonoBehaviour
             isLimbo = false;
             _transform.position = Vector3.Scale(_transform.position, GetCameraPlaneVector()) + popOutDistance *-GetCameraLookUnit();
         }
+
+        
     }
 
     Vector3 getFeetPos()
@@ -108,10 +141,17 @@ public class PlayerController : MonoBehaviour
     }*/
 
     bool IsGrounded() {
-        return Physics.Raycast(transform.position, -Vector3.up, (float)(_collider.bounds.extents.y + 0.1)) 
-            || Physics.Raycast(new Vector3(_collider.bounds.max.x, transform.position.y, _collider.bounds.max.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1))
-            || Physics.Raycast(new Vector3(_collider.bounds.min.x, transform.position.y, _collider.bounds.min.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1))
-        ;
+        return (
+                Physics.Raycast(transform.position, -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 12)
+                || Physics.Raycast(new Vector3(_collider.bounds.max.x, transform.position.y, _collider.bounds.max.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 12)
+                || Physics.Raycast(new Vector3(_collider.bounds.min.x, transform.position.y, _collider.bounds.min.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 12)
+            ) || (
+                isLimbo && (
+                Physics.Raycast(transform.position, -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 14)
+                || Physics.Raycast(new Vector3(_collider.bounds.max.x, transform.position.y, _collider.bounds.max.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 14)
+                || Physics.Raycast(new Vector3(_collider.bounds.min.x, transform.position.y, _collider.bounds.min.z), -Vector3.up, (float)(_collider.bounds.extents.y + 0.1), 1 << 14)
+                )
+            );
     }
 
     void TryToJump()
