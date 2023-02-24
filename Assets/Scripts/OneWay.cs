@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
 public class OneWay : MonoBehaviour
@@ -19,7 +18,7 @@ public class OneWay : MonoBehaviour
             return;
         }
 
-        if (PlayerController.isLimbo && !(math.abs(collision.bounds.max.y - PlayerController.limboHeight) < 0.03))
+        if (PlayerController.isLimbo && !(Mathf.Abs(collision.bounds.max.y - PlayerController.limboHeight) < 0.03))
         {
             return;
         }
