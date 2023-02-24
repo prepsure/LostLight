@@ -8,6 +8,7 @@ TagManager:
   - InvisPlatform
   - Block
   - InvisBlock
+  - end
   layers:
   - Default
   - TransparentFX
