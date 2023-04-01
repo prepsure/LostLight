@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,8 @@ public class CameraTween : MonoBehaviour
     [SerializeField]
     public bool _active;
     public bool _undoActive;
+
+    public event Action CameraDone;
 
     [SerializeField]
     public Vector3 _cameraGoal;
@@ -45,6 +48,7 @@ public class CameraTween : MonoBehaviour
                 GetComponent<Transform>().position = _cameraGoal;
                 GetComponent<Transform>().LookAt(Vector3.zero, Vector3.up);
 
+                CameraDone?.Invoke();
                 return;
             }
 

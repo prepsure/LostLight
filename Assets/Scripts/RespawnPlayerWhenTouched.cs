@@ -25,11 +25,15 @@ public class RespawnPlayerWhenTouched : MonoBehaviour
 
         PlayerController pc = other.gameObject.GetComponent<PlayerController>();
 
-        Debug.Log(pc.LastStandingPosition);
+        //Debug.Log(pc.LastStandingPosition);
 
         PlayerController.isLimbo = true;
         other.gameObject.GetComponent<Transform>().position = pc.LastStandingPosition;
         other.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+
+        Camera cam = FindObjectOfType<Camera>();
+        cam.transform.position = pc.LastCameraStandingPosition;
+        cam.transform.rotation = pc.LastCameraStandingRotation;
 
         pc.yes2 = false;
     }

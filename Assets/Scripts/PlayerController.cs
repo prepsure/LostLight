@@ -33,6 +33,8 @@ public class PlayerController : MonoBehaviour
     public bool LastLimbo = false;
     private const double coyoteTime = 0.1;
     public Vector3 LastStandingPosition { get; private set; }
+    public Vector3 LastCameraStandingPosition { get; private set; }
+    public Quaternion LastCameraStandingRotation { get; private set; }
     public bool CanTurn = true;
 
     public static bool isLimbo = false;
@@ -106,7 +108,11 @@ public class PlayerController : MonoBehaviour
             && (isLimbo == platformStandingOn.collider.GetComponent<ArbitraryDataScript>()._isLimbo || isLimbo))
         {
             lastPlatform = platformStandingOn.collider.gameObject;
+
             LastStandingPosition = transform.position;
+            LastCameraStandingPosition = _camera.transform.position;
+            LastCameraStandingRotation = _camera.transform.rotation;
+
             lastStandingTime = Time.realtimeSinceStartupAsDouble;
             LastLimbo = isLimbo;
         }
