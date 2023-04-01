@@ -31,7 +31,7 @@ public class WaterWave : MonoBehaviour
 
         Vector2 offset = GetComponent<Renderer>().materials[0].GetTextureOffset("_MainTex");
         GetComponent<Renderer>().materials[0].SetTextureOffset("_MainTex", offset + new Vector2(speed, 0));
-        GetComponent<Transform>().localPosition = new Vector3(0, -16.75f, 0) + 0.25f * Mathf.Sin(Time.realtimeSinceStartup*1.5f) * Vector3.up;
+        GetComponent<Transform>().localPosition = new Vector3(0, -16.2f, 0) + 0.25f * Mathf.Sin(Time.realtimeSinceStartup*1.5f) * Vector3.up;
     }
 
     /*int func(Vector3 v)

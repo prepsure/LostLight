@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class win : MonoBehaviour
 {
@@ -36,6 +38,12 @@ public class win : MonoBehaviour
             Debug.Log("win!");
             Destroy(other.GetComponent<PlayerController>());
             done = true;
+
+            new Task(async delegate
+            {
+                await Task.Delay(10000);
+                SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
+            }).RunSynchronously();
         }
     }
 }
